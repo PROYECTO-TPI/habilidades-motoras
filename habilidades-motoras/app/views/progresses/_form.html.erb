@@ -1,0 +1,25 @@
+<%= form_for(@progress) do |f| %>
+  <% if @progress.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@progress.errors.count, "error") %> prohibited this progress from being saved:</h2>
+
+      <ul>
+      <% @progress.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :User_id %><br>
+    <%= f.number_field :User_id %>
+  </div>
+  <div class="field">
+    <%= f.label :Publication_id %><br>
+    <%= f.number_field :Publication_id %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

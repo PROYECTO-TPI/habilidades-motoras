@@ -1,0 +1,29 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Listing Suggested Posts</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Form</th>
+      <th>Publication</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @suggested_posts.each do |suggested_post| %>
+      <tr>
+        <td><%= suggested_post.form_id %></td>
+        <td><%= suggested_post.publication_id %></td>
+        <td><%= link_to 'Show', suggested_post %></td>
+        <td><%= link_to 'Edit', edit_suggested_post_path(suggested_post) %></td>
+        <td><%= link_to 'Destroy', suggested_post, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Suggested post', new_suggested_post_path %>

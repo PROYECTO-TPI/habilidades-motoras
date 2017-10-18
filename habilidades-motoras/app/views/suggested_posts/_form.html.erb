@@ -1,0 +1,25 @@
+<%= form_for(@suggested_post) do |f| %>
+  <% if @suggested_post.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@suggested_post.errors.count, "error") %> prohibited this suggested_post from being saved:</h2>
+
+      <ul>
+      <% @suggested_post.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :form_id %><br>
+    <%= f.number_field :form_id %>
+  </div>
+  <div class="field">
+    <%= f.label :publication_id %><br>
+    <%= f.number_field :publication_id %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>
