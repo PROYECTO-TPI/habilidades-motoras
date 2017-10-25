@@ -64,7 +64,15 @@ class UsersController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_user
-      @user = User.find(params[:id])
+      if !(Integer(params[:id]) rescue false)
+        renderError("Not Acceptable (Invalid Params)", 406, "The parameter id is not an integer")
+        return -1
+      end
+      if @user = User.find(params[:id])
+        return @user
+      else
+        renderError("Not found",404,"User not found")
+      end
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
