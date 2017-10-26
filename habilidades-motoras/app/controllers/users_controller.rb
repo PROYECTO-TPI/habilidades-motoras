@@ -1,64 +1,90 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [:show, :edit, :update, :destroy]
+  before_action :set_user, only: [:show,:update, :destroy, :verify_pass]
+  before_action :authenticate_request!, only:[:show, :update, :get_user, :verify_pass]
 
-  # GET /users
-  # GET /users.json
-  def index
-    @users = User.all
+  def login
+    user = User.find_by(email: params[:email].to_s.downcase)
+    if user && user.authenticate(params[:password])
+        auth_token = JsonWebToken.encode({user_id: user.id})
+        render json: {auth_token: auth_token}, status: :ok
+    else
+      renderError("Unauthenticated",401,"Invalid username / password")
+    end
   end
 
-  # GET /users/1
-  # GET /users/1.json
+  def search_user
+    user=User.find_by(id: params[:id])
+    if user
+      renderError("Success",200,"The user exists")
+    else
+      renderError("Not found",404,"The user does not exists")
+    end
+  end
+
+  def confirm
+    token = params[:token].to_s
+    user = User.find_by(confirmation_token: token)
+    if user.present? && user.confirmation_token_valid?
+      user.mark_as_confirmed!
+      UserNotifierMailer.send_confirm_email(user).deliver
+      render json: "Email succesfully confirmed", status: :ok
+    else
+      renderError("Not found",404,"Invalid token")
+    end
+  end
+
+  def verify_pass
+    if @user.authenticate(params[:password])
+      renderError("Success",200,"password is correct")
+    else
+      renderError("Unauthenticated",401,"Invalid password")
+    end
+  end
+
+  def get_user
+    render json: {id: @current_user.id,
+                  name: @current_user.name,
+                  age: @current_user.age,
+                  email: @current_user.email,
+                  type: @current_user.type}
+  end
+
   def show
+    if @current_user.id == params[:id].to_i
+      get_user
+    else
+      renderError("Forbidden",403,"current user has no access")
+    end
   end
 
-  # GET /users/new
-  def new
-    @user = User.new
-  end
-
-  # GET /users/1/edit
-  def edit
-  end
-
-  # POST /users
-  # POST /users.json
   def create
-    @user = User.new(user_params)
-
-    respond_to do |format|
-      if @user.save
-        format.html { redirect_to @user, notice: 'User was successfully created.' }
-        format.json { render :show, status: :created, location: @user }
-      else
-        format.html { render :new }
-        format.json { render json: @user.errors, status: :unprocessable_entity }
-      end
+      @user = User.new(user_params)
+    if @user.save
+      UserNotifierMailer.send_signup_email(@user).deliver
+      head 201
+    else
+      render json: @user.errors, status: :unprocessable_entity
     end
   end
 
-  # PATCH/PUT /users/1
-  # PATCH/PUT /users/1.json
   def update
-    respond_to do |format|
-      if @user.update(user_params)
-        format.html { redirect_to @user, notice: 'User was successfully updated.' }
-        format.json { render :show, status: :ok, location: @user }
+    if @current_user.id == params[:id].to_i
+      if (!user_params[:name]) && ( !user_params[:age]) && (!user_params[:email]) && (!user_params[:type])
+        if @user.update(user_params)
+          head 204
+        else
+          render json: @user.errors, status: :unprocessable_entity
+        end
       else
-        format.html { render :edit }
-        format.json { render json: @user.errors, status: :unprocessable_entity }
+        renderError("Not acceptable",406,"Only password cant be updated")
       end
+    else
+      renderError("Forbidden",403,"current user has no access")
     end
   end
 
-  # DELETE /users/1
-  # DELETE /users/1.json
   def destroy
     @user.destroy
-    respond_to do |format|
-      format.html { redirect_to users_url, notice: 'User was successfully destroyed.' }
-      format.json { head :no_content }
-    end
   end
 
   private
